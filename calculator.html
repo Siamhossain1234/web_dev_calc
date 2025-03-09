@@ -1,0 +1,260 @@
+<html>
+  <head>
+    <title>Calculator</title>
+    <style>
+      .button {
+        width: 80px;
+        height: 40px;
+        background-color: #6969b3;
+        border: 0px;
+        color: #ffffffca;
+        border-radius: 6px;
+        box-shadow: 3px 5px 5px black;
+      }
+
+      button:hover {
+        background-color: #98c1d9;
+      }
+
+      button:active {
+        box-shadow: 2px 4px 4px black;
+      }
+
+      .flexContainer {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: space-evenly;
+        align-items: baseline;
+        width: 390px;
+        row-gap: 8px;
+      }
+
+      .displayContainer {
+        display: flex;
+        justify-content: flex-end;
+        width: 390px;
+      }
+
+      #display {
+        margin-right: 20px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <h1>Calculator</h1>
+    <div class="displayContainer">
+      <span id="display"></span>
+    </div>
+
+    <div class="flexContainer">
+      <button class="button number">7</button>
+      <button class="button number">8</button>
+      <button class="button number">9</button>
+      <button class="button operator">/</button>
+
+      <button class="button number">4</button>
+      <button class="button number">5</button>
+      <button class="button number">6</button>
+      <button class="button operator">*</button>
+
+      <button class="button number">1</button>
+      <button class="button number">2</button>
+      <button class="button number">3</button>
+      <button class="button operator">-</button>
+
+      <button class="button number">0</button>
+      <button class="button decimal">.</button>
+      <button class="button equals">=</button>
+      <button class="button operator">+</button>
+
+      <button class="button parenthesis">(</button>
+      <button class="button parenthesis">)</button>
+    </div>
+
+    <script>
+      const numbersArr = Array.from(document.getElementsByClassName("number"));
+      const operatorsArr = Array.from(document.getElementsByClassName("operator"));
+      const parenthesisArr = Array.from(document.getElementsByClassName("parenthesis"));
+      const numberStrs = "0123456789".split("");
+      opersarr="+-*/".split("");
+
+      const data = {
+        displayString: "0",
+        appendStringNum: (newChar) => {
+          if (newChar === ".") {
+            //decimal + 0?
+          }
+
+          if (numberStrs.includes(newChar)) {
+            if (data.displayString === "0") {
+              data.displayString = "";
+            }
+            data.displayString += newChar;
+          }
+          data.updateDisplay();
+        },
+
+        appendStringOperator: (newChar) => {
+          if (numberStrs.includes(data.displayString.slice(-1)) || data.displayString.slice(-1) === ")") {
+            data.displayString += newChar;
+          }
+          data.updateDisplay();
+        },
+
+        appendStringParenthesis: (newChar) => {
+          if (newChar === ")") {
+            if (data.displayString.split("(").length <= data.displayString.split(")").length) {
+              //if there are not enough open parenthesis to add a closing parenthesis terminate early
+              return;
+            }
+            if (operatorsArr.map((operator) => operator.innerText).includes(data.displayString[data.displayString.length - 1])) {
+              //early termination for adding parenthesis after operator
+              return;
+            }
+          }
+          if (data.displayString === "0") {
+            data.displayString = "";
+            data.displayString += newChar;
+            return;
+          }
+
+          data.displayString += newChar;
+
+          data.updateDisplay();
+        },
+        updateDisplay: () => {
+          const display = document.getElementById("display");
+          display.innerText = data.displayString;
+        },
+      };
+
+      const display = document.getElementById("display");
+      display.innerText = data.displayString;
+
+      numbersArr.map((elem, i) => {
+        elem.addEventListener("click", (evt) => {
+          data.appendStringNum(elem.innerText);
+        });
+      });
+
+      operatorsArr.map((elem, i) => {
+        elem.addEventListener("click", (evt) => {
+          data.appendStringOperator(elem.innerText);
+        });
+      });
+
+      parenthesisArr.map((elem, i) => {
+        elem.addEventListener("click", (evt) => {
+          data.appendStringParenthesis(elem.innerText);
+        });
+      });
+
+      document.querySelector('.button.equals').addEventListener('click', function() {
+            if (data.displayString === "0") {
+                console.error("Display string is undefined");
+                return;
+            }
+
+    let infixexpression = [];
+    let number = [];
+
+    for (let char of data.displayString) {
+        if (numberStrs.includes(char)) {
+            number.push(char);
+        } else if (opersarr.includes(char) || char === '(' || char === ')') {
+            if (number.length > 0) {
+                infixexpression.push(number.join('')); 
+                number = [];
+            }
+            infixexpression.push(char); 
+        }
+    }
+
+    if (number.length > 0) {
+        infixexpression.push(number.join('')); 
+    }
+    console.log(infixexpression);
+      let postfixexpression=[];
+      let stack =[];
+      let pemdas = {
+        "+": 1,
+        "-": 1,
+        "*": 2,
+        "/": 2,
+        "(": 0,
+        ")": 0,
+      };  
+
+      for (let i=0;i<infixexpression.length;i++){
+          if (!isNaN(infixexpression[i])){
+            postfixexpression.push(infixexpression[i]);
+          }
+          else if (infixexpression[i]==="("){
+            stack.push(infixexpression[i]);
+          }
+          else if (infixexpression[i]===")"){
+            while(stack[stack.length-1]!=="("){ 
+              postfixexpression.push(stack.pop());
+            }
+            stack.pop();
+          }
+          else if (opersarr.includes(infixexpression[i])){
+            if(pemdas[infixexpression[i]]>pemdas[stack[stack.length-1]]){
+              stack.push(infixexpression[i]);
+            }
+            else{
+              while(pemdas[infixexpression[i]]<=pemdas[stack[stack.length-1]]){
+                postfixexpression.push(stack.pop());
+              }
+              stack.push(infixexpression[i]);
+            }
+          }
+      }
+
+      while(stack.length>0){
+        postfixexpression.push(stack.pop());
+      }
+
+      console.log(postfixexpression);
+
+  function evaluatePostfix(postfix) {
+    let stack = [];
+    for (let t of postfix) {
+    let add = 0;
+    let mult = 1;
+    
+    if (t === "+") {
+        add += parseFloat(stack.pop());
+        add += parseFloat(stack.pop());
+        stack.push(add);
+    } else if (t === "*") {
+        mult *= parseFloat(stack.pop());
+        mult *= parseFloat(stack.pop());
+        stack.push(mult);
+    } else if (t === "-") {
+        add -= parseFloat(stack.pop());
+        add += parseFloat(stack.pop());
+        stack.push(add);
+    } else if (t === "/") {
+        mult /= parseFloat(stack.pop());
+        mult *= parseFloat(stack.pop());
+        stack.push(mult);
+    } else {
+        stack.push(t);
+    }
+}
+
+    return stack.pop();
+}
+
+
+data.displayString=evaluatePostfix(postfixexpression).toString();
+data.updateDisplay();
+
+});
+
+    </script>
+  </body>
+</html>
